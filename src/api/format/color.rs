@@ -43,6 +43,8 @@
 //! workbook.save_as("./examples/color_set_tab_color.xlsx").unwrap();
 //! ```
 
+use crate::api::theme::Theme;
+use crate::api::worksheet::WorkSheet;
 use crate::xml::common::FromFormat;
 use crate::xml::style::color::Color;
 
@@ -67,6 +69,18 @@ pub enum FormatColor {
     RGB(u8, u8, u8),
 }
 
+impl FormatColor {
+    pub fn to_rgb(&self, worksheet: &WorkSheet) -> Option<(u8, u8, u8)> {
+        match self {
+            FormatColor::Default => None,
+            FormatColor::Index(index) => Theme::index_to_rgb(*index),
+            FormatColor::Theme(color_theme, tint) => worksheet
+                .get_theme(0)
+                .and_then(|theme| theme.theme_to_rgb(*color_theme, *tint)),
+            FormatColor::RGB(r, g, b) => Some((*r, *g, *b)),
+        }
+    }
+}
 
 impl Default for FormatColor {
     fn default() -> Self {

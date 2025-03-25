@@ -2,18 +2,17 @@
 //! This module contains the [`Format`] struct, which used to edit the style of the [`Cell`],
 //! also defines some methods for working with [`Format`].
 //!
-pub use align::{FormatAlignType, FormatAlign};
+pub use align::{FormatAlign, FormatAlignType};
 pub use border::{FormatBorder, FormatBorderElement, FormatBorderType};
 pub use color::FormatColor;
 pub use fill::FormatFill;
 pub use font::FormatFont;
-use crate::Cell;
 
 mod align;
+mod border;
 mod color;
 mod fill;
 mod font;
-mod border;
 
 ///
 /// [`Format`] struct, which used to edit the style of the [`Cell`].
@@ -328,7 +327,7 @@ impl Format {
         self.border.bottom = format_border;
         self
     }
-    
+
     /// Set the background color of the format.
     ///
     /// ## Arguments
@@ -359,10 +358,12 @@ impl Format {
     /// Returns the modified Format with the alignment of the format set to the provided type.
     pub fn set_align(mut self, format_align_type: FormatAlignType) -> Self {
         match format_align_type {
-            FormatAlignType::Left | FormatAlignType::Center | FormatAlignType::Right =>
-                self.align.horizontal = Some(format_align_type),
-            FormatAlignType::Top | FormatAlignType::VerticalCenter | FormatAlignType::Bottom =>
-                self.align.vertical = Some(format_align_type),
+            FormatAlignType::Left | FormatAlignType::Center | FormatAlignType::Right => {
+                self.align.horizontal = Some(format_align_type)
+            }
+            FormatAlignType::Top | FormatAlignType::VerticalCenter | FormatAlignType::Bottom => {
+                self.align.vertical = Some(format_align_type)
+            }
         }
         self
     }
