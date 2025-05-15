@@ -62,7 +62,7 @@ pub(crate) fn zip_dir<P: AsRef<Path>>(prefix: &str, file_path: P) -> zip::result
     let it = &mut it.filter_map(|e| e.ok());
 
     let mut zip = zip::ZipWriter::new(writer);
-    let options = FileOptions::default()
+    let options = FileOptions::<()>::default()
         .compression_method(CompressionMethod::Deflated)
         .unix_permissions(0o755);
 

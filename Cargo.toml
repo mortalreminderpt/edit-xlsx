@@ -14,7 +14,7 @@ exclude = ["tests/"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-zip = "0.6.6"
+zip = "3.0.0"
 serde = { version = "1.0.196", features = ["derive"] }
 quick-xml = { version = "0.31.0", features = ["serialize"] }
 walkdir = "2.4.0"

@@ -237,7 +237,7 @@ impl Default for Workbook {
 }
 
 impl Workbook {
-    pub(crate) fn from_file(file: &mut ZipFile) -> Workbook {
+    pub(crate) fn from_file(file: &mut ZipFile<File>) -> Workbook {
         let mut xml = String::new();
         // let file_path = "xl/workbook.xml";
         file.read_to_string(&mut xml).unwrap();
