@@ -7,16 +7,14 @@ repository = "https://github.com/MortalreminderPT/edit-xlsx"
 documentation = "https://docs.rs/edit-xlsx/latest/edit_xlsx"
 keywords = ["excel", "xlsx", "writer", "editor"]
 readme = "README.md"
-version = "0.4.6"
-edition = "2021"
+version = "0.5.0"
+edition = "2024"
 exclude = ["tests/"]
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
-zip = "0.6.6"
-serde = { version = "1.0.196", features = ["derive"] }
-quick-xml = { version = "0.31.0", features = ["serialize"] }
+zip = { version="6.0", default-features=false, features=["deflate"] }
+serde = { version = "1.0.228", features = ["derive"] }
+quick-xml = { version = "0.38", features = ["serialize"] }
 walkdir = "2.4.0"
 futures = "0.3.30"
 ansi_term = { version = "0.12", optional = true }

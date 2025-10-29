@@ -1,11 +1,10 @@
 use crate::api::worksheet::WorkSheet;
 
-#[cfg(feature = "ansi_term_support")]
-use ansi_term::{ANSIString, Style, Colour};
 use crate::api::cell::location::{Location, LocationRange};
 use crate::api::cell::values::CellDisplay;
 use crate::api::theme::Theme;
 use crate::{FormatColor, FormatFill, FormatFont, Read, WorkSheetCol, WorkSheetResult, WorkSheetRow};
+use ansi_term::{ANSIString, Colour, Style};
 
 #[cfg(feature = "ansi_term_support")]
 impl WorkSheet {
