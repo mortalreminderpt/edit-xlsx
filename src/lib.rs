@@ -1,11 +1,11 @@
-
+#[cfg(feature = "ansi_term_support")]
+mod ansi_term;
 mod file;
 mod xml;
 mod result;
 mod utils;
 mod api;
 mod core;
-mod ansi_term;
 
 pub use api::workbook::Workbook;
 pub use api::worksheet::WorkSheet;

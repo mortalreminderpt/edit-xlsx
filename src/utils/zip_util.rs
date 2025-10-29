@@ -5,7 +5,7 @@ use std::path::Path;
 use walkdir::WalkDir;
 use zip::CompressionMethod;
 use zip::result::ZipError;
-use zip::write::FileOptions;
+use zip::write::SimpleFileOptions;
 
 pub(crate) fn extract_dir<P: AsRef<Path>>(file_path: P, target: &str) -> zip::result::ZipResult<String> {
     // read file from file path
@@ -62,7 +62,7 @@ pub(crate) fn zip_dir<P: AsRef<Path>>(prefix: &str, file_path: P) -> zip::result
     let it = &mut it.filter_map(|e| e.ok());
 
     let mut zip = zip::ZipWriter::new(writer);
-    let options = FileOptions::default()
+    let options = SimpleFileOptions::default()
         .compression_method(CompressionMethod::Deflated)
         .unix_permissions(0o755);
 
