@@ -1,7 +1,7 @@
-use std::hash::{Hash, Hasher};
-use serde::{Deserialize, Serialize};
 use crate::api::relationship::Rel;
 use crate::xml::relationships::rel_type::RelType;
+use serde::{Deserialize, Serialize};
+use std::hash::{Hash, Hasher};
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
 pub(crate) struct RelationShip {
@@ -12,11 +12,16 @@ pub(crate) struct RelationShip {
     #[serde(rename = "@Target")]
     pub(crate) target: String,
     #[serde(rename = "@TargetMode", skip_serializing_if = "Option::is_none")]
-    target_mode: Option<String>
+    target_mode: Option<String>,
 }
 
 impl RelationShip {
-    pub(crate) fn new(r_id: u32, rel_type: RelType, target: &str, target_mode: Option<String>) -> RelationShip {
+    pub(crate) fn new(
+        r_id: u32,
+        rel_type: RelType,
+        target: &str,
+        target_mode: Option<String>,
+    ) -> RelationShip {
         RelationShip {
             id: Rel::from_id(r_id),
             rel_type,
@@ -24,7 +29,6 @@ impl RelationShip {
             target_mode,
         }
     }
-
 
     pub(crate) fn new_sheet(r_id: u32, target: &str) -> RelationShip {
         RelationShip {
@@ -76,6 +80,15 @@ impl RelationShip {
             id: Rel::from_id(r_id),
             rel_type: RelType::Drawings,
             target: format!("../drawings/drawing{id}.xml"),
+            target_mode: None,
+        }
+    }
+
+    pub(crate) fn new_custom_xml(r_id: u32, id: u32) -> RelationShip {
+        RelationShip {
+            id: Rel::from_id(r_id),
+            rel_type: RelType::CustomXML,
+            target: format!("../customXml/item{id}.xml"),
             target_mode: None,
         }
     }

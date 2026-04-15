@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Deserialize, Serialize)]
 pub(crate) struct BookViews {
     #[serde(rename = "workbookView")]
-    pub(crate) book_views: Vec<WorkbookView>
+    pub(crate) book_views: Vec<WorkbookView>,
 }
 
 #[derive(Debug, Deserialize, Serialize, Default)]
@@ -19,7 +19,12 @@ pub(crate) struct WorkbookView {
     #[serde(rename = "@tabRatio", skip_serializing_if = "Option::is_none")]
     pub(crate) tab_ratio: Option<u32>,
     #[serde(rename = "@activeTab", skip_serializing_if = "Option::is_none")]
-    pub(crate) active_tab: Option<u32>
+    pub(crate) active_tab: Option<u32>,
+    #[serde(
+        rename(serialize = "@xr2:uid", deserialize = "@uid"),
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub(crate) uid: Option<String>,
 }
 
 impl Default for BookViews {

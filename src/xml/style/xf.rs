@@ -1,7 +1,7 @@
-use serde::{Deserialize, Serialize};
 use crate::api::format::FormatAlign;
-use crate::xml::style::alignment::Alignment;
 use crate::xml::common;
+use crate::xml::style::alignment::Alignment;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Deserialize, Serialize, PartialEq, Clone)]
 pub(crate) struct Xf {
@@ -15,17 +15,47 @@ pub(crate) struct Xf {
     pub(crate) border_id: u32,
     #[serde(rename = "@xfId", default)] //, skip_serializing_if = "common::is_zero")]
     xf_id: u32,
-    #[serde(rename = "@applyNumberFormat", default, skip_serializing_if = "common::is_zero")]
+    #[serde(
+        rename = "@quotePrefix",
+        default,
+        skip_serializing_if = "common::is_zero"
+    )]
+    pub(crate) quote_prefix: u32,
+    #[serde(
+        rename = "@applyNumberFormat",
+        default,
+        skip_serializing_if = "common::is_zero"
+    )]
     pub(crate) apply_number_format: u32,
-    #[serde(rename = "@applyFont", default, skip_serializing_if = "common::is_zero")]
+    #[serde(
+        rename = "@applyFont",
+        default,
+        skip_serializing_if = "common::is_zero"
+    )]
     pub(crate) apply_font: u32,
-    #[serde(rename = "@applyFill", default, skip_serializing_if = "common::is_zero")]
+    #[serde(
+        rename = "@applyFill",
+        default,
+        skip_serializing_if = "common::is_zero"
+    )]
     pub(crate) apply_fill: u32,
-    #[serde(rename = "@applyBorder", default, skip_serializing_if = "common::is_zero")]
+    #[serde(
+        rename = "@applyBorder",
+        default,
+        skip_serializing_if = "common::is_zero"
+    )]
     apply_border: u32,
-    #[serde(rename = "@applyAlignment", default, skip_serializing_if = "common::is_zero")]
+    #[serde(
+        rename = "@applyAlignment",
+        default,
+        skip_serializing_if = "common::is_zero"
+    )]
     pub(crate) apply_alignment: u32,
-    #[serde(rename = "@applyProtection", default, skip_serializing_if = "common::is_zero")]
+    #[serde(
+        rename = "@applyProtection",
+        default,
+        skip_serializing_if = "common::is_zero"
+    )]
     apply_protection: u32,
     #[serde(rename = "alignment", skip_serializing_if = "Option::is_none")]
     pub(crate) alignment: Option<Alignment>,
@@ -39,6 +69,7 @@ impl Xf {
             fill_id: 0,
             border_id: 0,
             xf_id: 0,
+            quote_prefix: 0,
             apply_font: 0,
             apply_fill: 0,
             apply_border: 0,
@@ -48,8 +79,6 @@ impl Xf {
             apply_protection: 0,
         }
     }
-    
-    pub(crate) fn updat_by_format_align(&mut self, format: &FormatAlign) {
-        
-    }
+
+    pub(crate) fn updat_by_format_align(&mut self, format: &FormatAlign) {}
 }

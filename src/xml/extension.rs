@@ -1,22 +1,25 @@
-mod xda_dynamic_array_properties;
-mod x15_workbook_pr;
 mod x14_slicer_styles;
 mod x15_timeline_styles;
+mod x15_workbook_pr;
+mod xcalcf_calc_features;
+mod xda_dynamic_array_properties;
 
-use std::collections::HashSet;
-use std::hash::{Hash, Hasher};
-use serde::{Deserialize, Serialize};
 use crate::xml::common::XmlnsAttrs;
 use crate::xml::extension::x14_slicer_styles::X14SlicerStyles;
 use crate::xml::extension::x15_timeline_styles::X15TimelineStyles;
 use crate::xml::extension::x15_workbook_pr::X15WorkbookPr;
+use crate::xml::extension::xcalcf_calc_features::XcalcfCalcFeatures;
 use crate::xml::extension::xda_dynamic_array_properties::XdaDynamicArrayProperties;
+use serde::{Deserialize, Serialize};
+use std::collections::HashSet;
+use std::hash::{Hash, Hasher};
 
 pub(crate) enum ExtensionType {
     X15WorkbookPr,
     X14SlicerStyles,
     X15TimelineStyles,
     XdaDynamicArrayProperties,
+    XcalcfCalcFeatures,
 }
 
 pub(crate) trait AddExtension {
@@ -45,17 +48,39 @@ impl AddExtension for ExtensionList {
 struct Extension {
     #[serde(rename = "@uri")]
     uri: String,
+    #[serde(flatten, skip_serializing_if = "Option::is_none")]
+    xmlns_attrs: Option<XmlnsAttrs>,
     #[serde(rename = "@xmlns:x14", skip_serializing_if = "Option::is_none")]
     xmlns_x14: Option<String>,
     #[serde(rename = "@xmlns:x15", skip_serializing_if = "Option::is_none")]
     xmlns_x15: Option<String>,
-    #[serde(rename(serialize = "x15:workbookPr", deserialize = "workbookPr"), skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename(serialize = "x15:workbookPr", deserialize = "workbookPr"),
+        skip_serializing_if = "Option::is_none"
+    )]
     x15_workbook_pr: Option<X15WorkbookPr>,
-    #[serde(rename(serialize = "x14:slicerStyles", deserialize = "slicerStyles"), skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename(serialize = "x14:slicerStyles", deserialize = "slicerStyles"),
+        skip_serializing_if = "Option::is_none"
+    )]
     x14_slicer_styles: Option<X14SlicerStyles>,
-    #[serde(rename(serialize = "x15:timelineStyles", deserialize = "timelineStyles"), skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename(serialize = "x15:timelineStyles", deserialize = "timelineStyles"),
+        skip_serializing_if = "Option::is_none"
+    )]
     x15_timeline_styles: Option<X15TimelineStyles>,
-    #[serde(rename(serialize = "xda:dynamicArrayProperties", deserialize = "dynamicArrayProperties"), skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename(serialize = "xcalcf:calcFeatures", deserialize = "calcFeatures"),
+        skip_serializing_if = "Option::is_none"
+    )]
+    xcalcf_calc_features: Option<XcalcfCalcFeatures>,
+    #[serde(
+        rename(
+            serialize = "xda:dynamicArrayProperties",
+            deserialize = "dynamicArrayProperties"
+        ),
+        skip_serializing_if = "Option::is_none"
+    )]
     xda_dynamic_array_properties: Option<XdaDynamicArrayProperties>,
 }
 
@@ -80,6 +105,7 @@ impl Extension {
             ExtensionType::X14SlicerStyles => Self::new_x14_slicer_styles(),
             ExtensionType::X15TimelineStyles => Self::new_x15_timeline_styles(),
             ExtensionType::XdaDynamicArrayProperties => Self::new_xda_dynamic_array_properties(),
+            ExtensionType::XcalcfCalcFeatures => Self::new_xcalcf_calc_features(),
         }
     }
 
@@ -87,23 +113,31 @@ impl Extension {
         Self {
             uri: "".to_string(),
             xmlns_x14: None,
-            xmlns_x15: Some("http://schemas.microsoft.com/office/spreadsheetml/2010/11/main".to_string()),
+            xmlns_x15: Some(
+                "http://schemas.microsoft.com/office/spreadsheetml/2010/11/main".to_string(),
+            ),
             x15_workbook_pr: Some(Default::default()),
             x14_slicer_styles: None,
             x15_timeline_styles: None,
             xda_dynamic_array_properties: None,
+            xcalcf_calc_features: None,
+            xmlns_attrs: None,
         }
     }
 
     fn new_x14_slicer_styles() -> Self {
         Self {
             uri: "{EB79DEF2-80B8-43e5-95BD-54CBDDF9020C}".to_string(),
-            xmlns_x14: Some("http://schemas.microsoft.com/office/spreadsheetml/2009/9/main".to_string()),
+            xmlns_x14: Some(
+                "http://schemas.microsoft.com/office/spreadsheetml/2009/9/main".to_string(),
+            ),
             xmlns_x15: None,
             x15_workbook_pr: None,
             x14_slicer_styles: Some(Default::default()),
             x15_timeline_styles: None,
             xda_dynamic_array_properties: None,
+            xcalcf_calc_features: None,
+            xmlns_attrs: None,
         }
     }
 
@@ -111,11 +145,15 @@ impl Extension {
         Self {
             uri: "{9260A510-F301-46a8-8635-F512D64BE5F5}".to_string(),
             xmlns_x14: None,
-            xmlns_x15: Some("http://schemas.microsoft.com/office/spreadsheetml/2010/11/main".to_string()),
+            xmlns_x15: Some(
+                "http://schemas.microsoft.com/office/spreadsheetml/2010/11/main".to_string(),
+            ),
             x15_workbook_pr: None,
             x14_slicer_styles: None,
             x15_timeline_styles: Some(Default::default()),
             xda_dynamic_array_properties: None,
+            xcalcf_calc_features: None,
+            xmlns_attrs: None,
         }
     }
 
@@ -128,6 +166,22 @@ impl Extension {
             x14_slicer_styles: None,
             x15_timeline_styles: None,
             xda_dynamic_array_properties: Some(Default::default()),
+            xcalcf_calc_features: None,
+            xmlns_attrs: None,
+        }
+    }
+
+    fn new_xcalcf_calc_features() -> Extension {
+        Self {
+            uri: "{b58b0392-4f1f-4190-bb64-5df3571dce5f}".to_string(),
+            xmlns_x14: None,
+            xmlns_x15: None,
+            x15_workbook_pr: None,
+            x14_slicer_styles: None,
+            x15_timeline_styles: None,
+            xda_dynamic_array_properties: None,
+            xcalcf_calc_features: Some(Default::default()),
+            xmlns_attrs: None,
         }
     }
 }

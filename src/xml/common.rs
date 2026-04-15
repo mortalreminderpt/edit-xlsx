@@ -1,16 +1,16 @@
 pub(crate) mod cell;
 
 extern crate proc_macro;
+use serde::{Deserialize, Serialize};
 use std::hash::Hash;
 use std::ops::{Deref, DerefMut};
-use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub(crate) struct PhoneticPr {
     #[serde(rename = "@fontId")]
     font_id: u32,
     #[serde(rename = "@type")]
-    phonetic_pr_type: String
+    phonetic_pr_type: String,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -27,7 +27,10 @@ pub(crate) struct XmlnsAttrs {
     xmlns_mc: Option<String>,
     #[serde(rename = "@xmlns:etc", skip_serializing_if = "Option::is_none")]
     xmlns_etc: Option<String>,
-    #[serde(rename(serialize = "@mc:Ignorable", deserialize = "@Ignorable"), skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename(serialize = "@mc:Ignorable", deserialize = "@Ignorable"),
+        skip_serializing_if = "Option::is_none"
+    )]
     mc_ignorable: Option<String>,
     #[serde(rename = "@xmlns:x14ac", skip_serializing_if = "Option::is_none")]
     xmlns_x14ac: Option<String>,
@@ -47,7 +50,13 @@ pub(crate) struct XmlnsAttrs {
     xmlns_xr3: Option<String>,
     #[serde(rename = "@xmlns:x16r2", skip_serializing_if = "Option::is_none")]
     xmlns_x16r2: Option<String>,
-    #[serde(rename(serialize = "@xr:uid", deserialize = "@uid"), default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "@xmlns:xcalcf", skip_serializing_if = "Option::is_none")]
+    xmlns_xcalcf: Option<String>,
+    #[serde(
+        rename(serialize = "@xr:uid", deserialize = "@uid"),
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     xr_uid: Option<String>,
 }
 
@@ -69,8 +78,9 @@ impl XmlnsAttrs {
             xmlns_xr2: None,
             xmlns_xr3: None,
             xmlns_x16r2: None,
+            xmlns_xcalcf: None,
             xr_uid: None,
-            xmlns_xdr: None
+            xmlns_xdr: None,
         }
     }
 }
@@ -78,14 +88,12 @@ impl XmlnsAttrs {
 #[derive(Debug, Deserialize, Serialize, Clone, PartialEq, Default)]
 pub(crate) struct Element<T: Clone + PartialEq + Default> {
     #[serde(rename = "@val")]
-    pub(crate) val: T
+    pub(crate) val: T,
 }
 
 impl<T: Clone + PartialEq + Default> Element<T> {
     pub(crate) fn from_val(val: T) -> Element<T> {
-        Element {
-            val
-        }
+        Element { val }
     }
 }
 
@@ -102,13 +110,19 @@ impl XmlnsAttrs {
     pub(crate) fn workbook_default() -> XmlnsAttrs {
         XmlnsAttrs {
             xmlns: Some("http://schemas.openxmlformats.org/spreadsheetml/2006/main".to_string()),
-            xmlns_r: Some("http://schemas.openxmlformats.org/officeDocument/2006/relationships".to_string()),
-            xmlns_mc: Some("http://schemas.openxmlformats.org/markup-compatibility/2006".to_string()),
+            xmlns_r: Some(
+                "http://schemas.openxmlformats.org/officeDocument/2006/relationships".to_string(),
+            ),
+            xmlns_mc: Some(
+                "http://schemas.openxmlformats.org/markup-compatibility/2006".to_string(),
+            ),
             xmlns_etc: None,
             mc_ignorable: Some("x15".to_string()),
             xmlns_x14: None,
             xmlns_x14ac: None,
-            xmlns_x15: Some("http://schemas.microsoft.com/office/spreadsheetml/2010/11/main".to_string()),
+            xmlns_x15: Some(
+                "http://schemas.microsoft.com/office/spreadsheetml/2010/11/main".to_string(),
+            ),
             xmlns_xr: None,
             xmlns_xr6: None,
             xmlns_xr9: None,
@@ -116,20 +130,27 @@ impl XmlnsAttrs {
             xmlns_xr2: None,
             xmlns_xr3: None,
             xmlns_x16r2: None,
+            xmlns_xcalcf: None,
             xr_uid: None,
-            xmlns_xdr: None
+            xmlns_xdr: None,
         }
     }
-    
+
     pub(crate) fn worksheet_default() -> XmlnsAttrs {
         XmlnsAttrs {
             xmlns: Some("http://schemas.openxmlformats.org/spreadsheetml/2006/main".to_string()),
-            xmlns_r: Some("http://schemas.openxmlformats.org/officeDocument/2006/relationships".to_string()),
-            xmlns_mc: Some("http://schemas.openxmlformats.org/markup-compatibility/2006".to_string()),
+            xmlns_r: Some(
+                "http://schemas.openxmlformats.org/officeDocument/2006/relationships".to_string(),
+            ),
+            xmlns_mc: Some(
+                "http://schemas.openxmlformats.org/markup-compatibility/2006".to_string(),
+            ),
             xmlns_etc: None,
             mc_ignorable: Some("x14ac".to_string()),
             xmlns_x14: None,
-            xmlns_x14ac: Some("http://schemas.microsoft.com/office/spreadsheetml/2009/9/ac".to_string()),
+            xmlns_x14ac: Some(
+                "http://schemas.microsoft.com/office/spreadsheetml/2009/9/ac".to_string(),
+            ),
             xmlns_x15: None,
             xmlns_xr: None,
             xmlns_xr6: None,
@@ -138,20 +159,27 @@ impl XmlnsAttrs {
             xmlns_xr2: None,
             xmlns_xr3: None,
             xmlns_x16r2: None,
+            xmlns_xcalcf: None,
             xr_uid: None,
-            xmlns_xdr: None
+            xmlns_xdr: None,
         }
     }
 
     pub(crate) fn stylesheet_default() -> XmlnsAttrs {
         XmlnsAttrs {
             xmlns: Some("http://schemas.openxmlformats.org/spreadsheetml/2006/main".to_string()),
-            xmlns_r: Some("http://schemas.openxmlformats.org/officeDocument/2006/relationships".to_string()),
-            xmlns_mc: Some("http://schemas.openxmlformats.org/markup-compatibility/2006".to_string()),
+            xmlns_r: Some(
+                "http://schemas.openxmlformats.org/officeDocument/2006/relationships".to_string(),
+            ),
+            xmlns_mc: Some(
+                "http://schemas.openxmlformats.org/markup-compatibility/2006".to_string(),
+            ),
             xmlns_etc: None,
             mc_ignorable: Some("x14ac x16r2".to_string()),
             xmlns_x14: None,
-            xmlns_x14ac: Some("http://schemas.microsoft.com/office/spreadsheetml/2009/9/ac".to_string()),
+            xmlns_x14ac: Some(
+                "http://schemas.microsoft.com/office/spreadsheetml/2009/9/ac".to_string(),
+            ),
             xmlns_x15: None,
             xmlns_xr: None,
             xmlns_xr6: None,
@@ -159,12 +187,15 @@ impl XmlnsAttrs {
             xmlns_xr10: None,
             xmlns_xr2: None,
             xmlns_xr3: None,
-            xmlns_x16r2: Some("http://schemas.microsoft.com/office/spreadsheetml/2015/02/main".to_string()),
+            xmlns_x16r2: Some(
+                "http://schemas.microsoft.com/office/spreadsheetml/2015/02/main".to_string(),
+            ),
+            xmlns_xcalcf: None,
             xr_uid: None,
-            xmlns_xdr: None
+            xmlns_xdr: None,
         }
     }
-    
+
     pub(crate) fn shared_string_default() -> XmlnsAttrs {
         XmlnsAttrs {
             xmlns: Some("http://schemas.openxmlformats.org/spreadsheetml/2006/main".to_string()),
@@ -182,8 +213,9 @@ impl XmlnsAttrs {
             xmlns_xr2: None,
             xmlns_xr3: None,
             xmlns_x16r2: None,
+            xmlns_xcalcf: None,
             xr_uid: None,
-            xmlns_xdr: None
+            xmlns_xdr: None,
         }
     }
 }
@@ -192,14 +224,16 @@ impl XmlnsAttrs {
     pub(crate) fn add_xr(&mut self) {
         match self.xmlns_xr {
             None => {
-                self.xmlns_xr = Some("http://schemas.microsoft.com/office/spreadsheetml/2014/revision".to_string());
+                self.xmlns_xr = Some(
+                    "http://schemas.microsoft.com/office/spreadsheetml/2014/revision".to_string(),
+                );
                 let mc = self.mc_ignorable.get_or_insert(String::new());
                 if mc.is_empty() {
                     mc.push_str("xr");
                 } else {
                     mc.push_str(" xr");
                 }
-            },
+            }
             _ => {}
         }
     }
@@ -207,14 +241,16 @@ impl XmlnsAttrs {
     pub(crate) fn add_xr_2(&mut self) {
         match self.xmlns_xr2 {
             None => {
-                self.xmlns_xr2 = Some("http://schemas.microsoft.com/office/spreadsheetml/2015/revision2".to_string());
+                self.xmlns_xr2 = Some(
+                    "http://schemas.microsoft.com/office/spreadsheetml/2015/revision2".to_string(),
+                );
                 let mc = self.mc_ignorable.get_or_insert(String::new());
                 if mc.is_empty() {
                     mc.push_str("xr2");
                 } else {
                     mc.push_str(" xr2");
                 }
-            },
+            }
             _ => {}
         }
     }
@@ -222,14 +258,16 @@ impl XmlnsAttrs {
     pub(crate) fn add_xr_3(&mut self) {
         match self.xmlns_xr3 {
             None => {
-                self.xmlns_xr3 = Some("http://schemas.microsoft.com/office/spreadsheetml/2016/revision3".to_string());
+                self.xmlns_xr3 = Some(
+                    "http://schemas.microsoft.com/office/spreadsheetml/2016/revision3".to_string(),
+                );
                 let mc = self.mc_ignorable.get_or_insert(String::new());
                 if mc.is_empty() {
                     mc.push_str("xr3");
                 } else {
                     mc.push_str(" xr3");
                 }
-            },
+            }
             _ => {}
         }
     }
@@ -237,14 +275,16 @@ impl XmlnsAttrs {
     pub(crate) fn add_xr_6(&mut self) {
         match self.xmlns_xr6 {
             None => {
-                self.xmlns_xr6 = Some("http://schemas.microsoft.com/office/spreadsheetml/2016/revision6".to_string());
+                self.xmlns_xr6 = Some(
+                    "http://schemas.microsoft.com/office/spreadsheetml/2016/revision6".to_string(),
+                );
                 let mc = self.mc_ignorable.get_or_insert(String::new());
                 if mc.is_empty() {
                     mc.push_str("xr6");
                 } else {
                     mc.push_str(" xr6");
                 }
-            },
+            }
             _ => {}
         }
     }
@@ -252,14 +292,16 @@ impl XmlnsAttrs {
     pub(crate) fn add_xr_10(&mut self) {
         match self.xmlns_xr10 {
             None => {
-                self.xmlns_xr10 = Some("http://schemas.microsoft.com/office/spreadsheetml/2016/revision10".to_string());
+                self.xmlns_xr10 = Some(
+                    "http://schemas.microsoft.com/office/spreadsheetml/2016/revision10".to_string(),
+                );
                 let mc = self.mc_ignorable.get_or_insert(String::new());
                 if mc.is_empty() {
                     mc.push_str("xr10");
                 } else {
                     mc.push_str(" xr10");
                 }
-            },
+            }
             _ => {}
         }
     }
@@ -283,9 +325,10 @@ pub(crate) trait FromFormat<T: Default>: Default {
     }
 }
 
-impl<ApiFormat: Default, XmlFormat: Default + FromFormat<ApiFormat>> FromFormat<ApiFormat> for Option<&XmlFormat> {
-    fn set_attrs_by_format(&mut self, format: &ApiFormat) {
-    }
+impl<ApiFormat: Default, XmlFormat: Default + FromFormat<ApiFormat>> FromFormat<ApiFormat>
+    for Option<&XmlFormat>
+{
+    fn set_attrs_by_format(&mut self, format: &ApiFormat) {}
 
     fn set_format(&self, format: &mut ApiFormat) {
         *format = match self {

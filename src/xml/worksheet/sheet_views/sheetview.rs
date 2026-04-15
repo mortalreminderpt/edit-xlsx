@@ -1,29 +1,57 @@
-use serde::{Deserialize, Serialize};
 use crate::api::cell::location::{Location, LocationRange};
 use crate::xml::worksheet::sheet_data::cell::Sqref;
 use crate::xml::worksheet::sheet_views::sheetview::pane::Pane;
-use crate::xml::worksheet::sheet_views::sheetview::selection::{Selection, ActivePane};
+use crate::xml::worksheet::sheet_views::sheetview::selection::{ActivePane, Selection};
+use serde::{Deserialize, Serialize};
 
 pub mod pane;
 pub mod selection;
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]
 pub(crate) struct SheetView {
-    #[serde(rename = "@showGridLines", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "@showGridLines",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     show_grid_lines: Option<u8>,
-    #[serde(rename = "@showRowColHeaders", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "@showRowColHeaders",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     show_row_col_headers: Option<u8>,
-    #[serde(rename = "@tabSelected", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "@tabSelected",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     tab_selected: Option<u8>,
     #[serde(rename = "@view", default, skip_serializing_if = "Option::is_none")]
     view: Option<String>,
-    #[serde(rename = "@zoomScaleNormal", default, skip_serializing_if = "Option::is_none")]
-    zoom_scale_normal: Option<u32>,
-    #[serde(rename = "@zoomScale", default, skip_serializing_if = "Option::is_none")]
-    zoom_scale: Option<u16>,
-    #[serde(rename = "@topLeftCell", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "@topLeftCell",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     top_left_cell: Option<String>,
-    #[serde(rename = "@rightToLeft", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "@zoomScale",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    zoom_scale: Option<u16>,
+    #[serde(
+        rename = "@zoomScaleNormal",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    zoom_scale_normal: Option<u32>,
+    #[serde(
+        rename = "@rightToLeft",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     right_to_left: Option<u8>,
     #[serde(rename = "@workbookViewId")]
     workbook_view_id: u32,
@@ -54,35 +82,34 @@ impl SheetView {
         match self.selection.len() {
             0 => self.selection.push(Selection::from_loc_range(loc_range)),
             1 => self.selection[0].set_selection(loc_range),
-            _ => {
-                self.selection.iter_mut().for_each(|s| {
-                    s.set_selection(loc_range)
-                })
-            }
+            _ => self
+                .selection
+                .iter_mut()
+                .for_each(|s| s.set_selection(loc_range)),
         }
     }
 
     fn add_active_pane(&mut self, active_pane: &str) {
         let pane = Some(String::from(active_pane));
-        let selection = self.selection.iter_mut()
-            .find(|s| s.pane == pane);
+        let selection = self.selection.iter_mut().find(|s| s.pane == pane);
         if let None = selection {
-            self.selection.push(Selection::from_active_pane(&pane.unwrap()));
+            self.selection
+                .push(Selection::from_active_pane(&pane.unwrap()));
         }
     }
 
     pub(crate) fn set_frozen_panes<L: Location>(&mut self, loc: L, frozen: bool) {
         let (row, col) = loc.to_location();
         match (row, col) {
-            (1, 1) => {},
+            (1, 1) => {}
             (1, col) => {
                 self.pane = vec![Pane::from_location((1, col), "topRight")];
                 self.add_active_pane("topRight");
-            },
+            }
             (row, 1) => {
                 self.pane = vec![Pane::from_location((row, 1), "bottomLeft")];
                 self.add_active_pane("bottomLeft");
-            },
+            }
             (row, col) => {
                 self.pane = vec![Pane::from_location((row, col), "bottomRight")];
                 self.add_active_pane("topRight");
