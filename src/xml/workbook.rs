@@ -1,28 +1,28 @@
 mod bookviews;
 mod defined_names;
 
-use std::fs::File;
-use std::io;
-use std::io::{BufReader, Read};
-use std::path::Path;
-use quick_xml::{de, NsReader, Reader, se};
-use quick_xml::de::Deserializer;
-use serde::{Deserialize, Serialize};
-use zip::read::ZipFile;
-use zip::ZipArchive;
+use crate::WorkbookResult;
 use crate::api::relationship::Rel;
 use crate::file::{XlsxFileType, XlsxFileWriter};
 use crate::result::{WorkSheetError, WorkbookError};
-use crate::WorkbookResult;
-use crate::xml::common::{XmlnsAttrs};
+use crate::xml::common::XmlnsAttrs;
 use crate::xml::extension::ExtensionList;
 use crate::xml::io::Io;
 use crate::xml::style::StyleSheet;
 use crate::xml::workbook::bookviews::BookViews;
 use crate::xml::workbook::defined_names::DefinedNames;
+use quick_xml::de::Deserializer;
+use quick_xml::{NsReader, Reader, de, se};
+use serde::{Deserialize, Serialize};
+use std::fs::File;
+use std::io;
+use std::io::{BufReader, Read};
+use std::path::Path;
+use zip::ZipArchive;
+use zip::read::ZipFile;
 
 #[derive(Debug, Deserialize, Serialize)]
-#[serde(rename="workbook")]
+#[serde(rename = "workbook")]
 pub(crate) struct Workbook {
     #[serde(flatten)]
     xmlns_attrs: XmlnsAttrs,
@@ -32,13 +32,20 @@ pub(crate) struct Workbook {
     pub(crate) file_sharing: Option<FileSharing>,
     #[serde(rename = "workbookPr")]
     workbook_pr: WorkbookPr,
-    #[serde(rename(serialize = "xr:revisionPtr", deserialize = "revisionPtr"), skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename(serialize = "xr:revisionPtr", deserialize = "revisionPtr"),
+        skip_serializing_if = "Option::is_none"
+    )]
     xr_revision_ptr: Option<XrRevisionPtr>,
     #[serde(rename = "bookViews")]
     pub(crate) book_views: BookViews,
     #[serde(rename = "sheets")]
     pub(crate) sheets: Sheets,
-    #[serde(rename = "definedNames", default, skip_serializing_if = "DefinedNames::is_empty")]
+    #[serde(
+        rename = "definedNames",
+        default,
+        skip_serializing_if = "DefinedNames::is_empty"
+    )]
     pub(crate) defined_names: DefinedNames,
     #[serde(rename = "calcPr", skip_serializing_if = "Option::is_none")]
     calc_pr: Option<CalcPr>,
@@ -49,34 +56,52 @@ pub(crate) struct Workbook {
 unsafe impl Sync for Workbook {}
 unsafe impl Send for Workbook {}
 
-
 impl Workbook {
     pub(crate) fn next_sheet_id(&self) -> u32 {
-        let max_sheet_id = self.sheets.sheets.iter().max_by_key(|s| { s.sheet_id }).unwrap().sheet_id;
+        let max_sheet_id = self
+            .sheets
+            .sheets
+            .iter()
+            .max_by_key(|s| s.sheet_id)
+            .unwrap()
+            .sheet_id;
         1 + max_sheet_id
     }
 
     pub(crate) fn add_worksheet(&mut self, id: u32, r_id: u32) -> WorkbookResult<String> {
         let name = format!("Sheet{id}");
-        if let Some(_) = self.sheets.sheets.iter().find(|s| { s.name == name }) {
+        if let Some(_) = self.sheets.sheets.iter().find(|s| s.name == name) {
             return Err(WorkbookError::SheetError(WorkSheetError::DuplicatedSheets));
         }
         self.sheets.sheets.push(Sheet::by_name(r_id, id, &name));
         Ok(name)
     }
 
-    pub(crate) fn add_worksheet_v2(&mut self, r_id: u32, default_name: Option<&str>) -> WorkbookResult<(u32, String)> {
+    pub(crate) fn add_worksheet_v2(
+        &mut self,
+        r_id: u32,
+        default_name: Option<&str>,
+    ) -> WorkbookResult<(u32, String)> {
         let id = self.next_sheet_id();
-        let name = if let Some(default_name) = default_name { default_name.to_string() } else { format!("Sheet{id}") };
-        if let Some(_) = self.sheets.sheets.iter().find(|s| { s.name == name }) {
+        let name = if let Some(default_name) = default_name {
+            default_name.to_string()
+        } else {
+            format!("Sheet{id}")
+        };
+        if let Some(_) = self.sheets.sheets.iter().find(|s| s.name == name) {
             return Err(WorkbookError::SheetError(WorkSheetError::DuplicatedSheets));
         }
         self.sheets.sheets.push(Sheet::by_name(r_id, id, &name));
         Ok((id, name))
     }
 
-    pub(crate) fn add_worksheet_by_name(&mut self, id: u32, r_id: u32, name: &str) -> WorkbookResult<()> { 
-        if let Some(_) = self.sheets.sheets.iter().find(|s| { s.name == name }) {
+    pub(crate) fn add_worksheet_by_name(
+        &mut self,
+        id: u32,
+        r_id: u32,
+        name: &str,
+    ) -> WorkbookResult<()> {
+        if let Some(_) = self.sheets.sheets.iter().find(|s| s.name == name) {
             return Err(WorkbookError::SheetError(WorkSheetError::DuplicatedSheets));
         }
         self.sheets.sheets.push(Sheet::by_name(r_id, id, &name));
@@ -123,23 +148,26 @@ impl Default for FileSharing {
 
 #[derive(Debug, Deserialize, Serialize, Default)]
 struct WorkbookPr {
+    #[serde(rename = "@codeName", skip_serializing_if = "Option::is_none")]
+    code_name: Option<String>,
     #[serde(rename = "@filterPrivacy", skip_serializing_if = "Option::is_none")]
     filter_privacy: Option<u32>,
-    #[serde(rename = "@defaultThemeVersion", skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "@defaultThemeVersion",
+        skip_serializing_if = "Option::is_none"
+    )]
     default_theme_version: Option<String>,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
 pub(crate) struct Sheets {
     #[serde(rename = "sheet")]
-    pub(crate) sheets: Vec<Sheet>
+    pub(crate) sheets: Vec<Sheet>,
 }
 
 impl Default for Sheets {
     fn default() -> Self {
-        Sheets {
-            sheets: vec![],
-        }
+        Sheets { sheets: vec![] }
     }
 }
 
@@ -160,7 +188,7 @@ impl Default for Sheet {
         Sheet {
             name: format!("sheet1"),
             sheet_id: 1,
-            r_id: Rel::from_id(1),// format!("rId1"),
+            r_id: Rel::from_id(1), // format!("rId1"),
             state: None,
         }
     }
@@ -211,11 +239,23 @@ struct XrRevisionPtr {
     rev_id_last_save: Option<u32>,
     #[serde(rename = "@documentId", skip_serializing_if = "Option::is_none")]
     document_id: Option<String>,
-    #[serde(rename(serialize = "@xr6:coauthVersionLast", deserialize = "@coauthVersionLast"), skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename(
+            serialize = "@xr6:coauthVersionLast",
+            deserialize = "@coauthVersionLast"
+        ),
+        skip_serializing_if = "Option::is_none"
+    )]
     xr6_coauth_version_last: Option<u32>,
-    #[serde(rename(serialize = "@xr6:coauthVersionMax", deserialize = "@coauthVersionMax"), skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename(serialize = "@xr6:coauthVersionMax", deserialize = "@coauthVersionMax"),
+        skip_serializing_if = "Option::is_none"
+    )]
     xr6_coauth_version_max: Option<u32>,
-    #[serde(rename(serialize = "@xr10:uidLastSave", deserialize = "@uidLastSave"), skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename(serialize = "@xr10:uidLastSave", deserialize = "@uidLastSave"),
+        skip_serializing_if = "Option::is_none"
+    )]
     xr10_uid_last_save: Option<String>,
 }
 
@@ -245,15 +285,17 @@ impl Workbook {
         let de = Deserializer::from_str(&xml);
         let wb = de::from_str(&xml).unwrap_or_default();
 
-
         wb
     }
 }
 
 impl Io<Workbook> for Workbook {
-    fn save<P: AsRef<Path>>(& self, file_path: P) {
+    fn save<P: AsRef<Path>>(&self, file_path: P) {
         let xml = se::to_string_with_root("workbook", &self).unwrap();
-        let xml = format!("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n{}", xml);
+        let xml = format!(
+            "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n{}",
+            xml
+        );
         let mut file = XlsxFileWriter::from_path(file_path, XlsxFileType::WorkbookFile).unwrap();
         file.write_all(xml.as_ref()).unwrap();
     }

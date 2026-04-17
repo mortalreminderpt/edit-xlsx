@@ -1,12 +1,16 @@
-use serde::{Deserialize, Serialize};
 use crate::api::cell::formula::Formula as ApiFormula;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Default, Deserialize, Serialize)]
 pub(crate) struct Formula {
     #[serde(rename = "@t", skip_serializing_if = "Option::is_none")]
     pub(crate) formula_type: Option<String>,
+    #[serde(rename = "@aca", skip_serializing_if = "Option::is_none")]
+    aca: Option<i32>,
     #[serde(rename = "@ref", skip_serializing_if = "Option::is_none")]
     pub(crate) formula_ref: Option<String>,
+    #[serde(rename = "@ca", skip_serializing_if = "Option::is_none")]
+    ca: Option<i32>,
     #[serde(rename = "@si", skip_serializing_if = "Option::is_none")]
     si: Option<i32>,
     #[serde(rename = "$value", default, skip_serializing_if = "String::is_empty")]
@@ -25,7 +29,7 @@ impl Formula {
 
     pub(crate) fn from_api_formula(api_formula: &ApiFormula) -> Formula {
         let mut formula = Formula::default();
-        if ! &api_formula.formula.is_empty() {
+        if !&api_formula.formula.is_empty() {
             formula.formula = api_formula.formula.clone();
         }
         if api_formula.formula_ref.is_some() {

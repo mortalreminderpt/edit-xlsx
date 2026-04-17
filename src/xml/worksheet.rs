@@ -1,13 +1,9 @@
-use std::collections::HashMap;
-use std::io::Read;
-use std::path::Path;
-use quick_xml::{de, se};
-use serde::{Deserialize, Serialize};
-use zip::read::ZipFile;
+use self::sheet_data::SheetData;
+use self::sheet_pr::SheetPr;
+use self::sheet_views::SheetViews;
 use crate::api::cell::location::{Location, LocationRange};
 use crate::api::relationship::Rel;
 use crate::file::{XlsxFileType, XlsxFileWriter};
-use crate::{Column, Filters, FormatColor};
 use crate::result::{ColResult, WorkSheetResult};
 use crate::xml::common::{PhoneticPr, XmlnsAttrs};
 use crate::xml::worksheet::auto_filter::AutoFilter;
@@ -17,31 +13,35 @@ use crate::xml::worksheet::data_validations::DataValidations;
 use crate::xml::worksheet::hyperlinks::Hyperlinks;
 use crate::xml::worksheet::ignore_errors::IgnoredErrors;
 use crate::xml::worksheet::merge_cells::MergeCells;
+use crate::xml::worksheet::page_breaks::PageBreaks;
 use crate::xml::worksheet::page_margins::PageMargins;
-use crate::xml::worksheet::row_breaks::RowBreaks;
 use crate::xml::worksheet::sheet_format::SheetFormatPr;
 use crate::xml::worksheet::table_parts::TableParts;
-use self::sheet_views::SheetViews;
-use self::sheet_data::SheetData;
-use self::sheet_pr::SheetPr;
+use crate::{Column, Filters, FormatColor};
+use quick_xml::{de, se};
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+use std::io::Read;
+use std::path::Path;
+use zip::read::ZipFile;
 
-pub(crate) mod sheet_data;
-mod sheet_pr;
-mod sheet_format;
-mod sheet_views;
-mod merge_cells;
-mod columns;
-mod ignore_errors;
-mod hyperlinks;
-mod page_margins;
 mod auto_filter;
-mod row_breaks;
+mod columns;
 mod conditional_formatting;
 mod data_validations;
+mod hyperlinks;
+mod ignore_errors;
+mod merge_cells;
+mod page_breaks;
+mod page_margins;
+pub(crate) mod sheet_data;
+mod sheet_format;
+mod sheet_pr;
+mod sheet_views;
 mod table_parts;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
-#[serde(rename="worksheet")]
+#[serde(rename = "worksheet")]
 pub(crate) struct WorkSheet {
     #[serde(flatten)]
     pub(crate) xmlns_attrs: XmlnsAttrs,
@@ -57,35 +57,81 @@ pub(crate) struct WorkSheet {
     pub(crate) cols: Option<Cols>,
     #[serde(rename = "sheetData", default)]
     pub(crate) sheet_data: SheetData,
-    #[serde(rename = "mergeCells", default, skip_serializing_if = "Option::is_none")]
-    merge_cells: Option<MergeCells>,
-    #[serde(rename = "phoneticPr", default, skip_serializing_if = "Option::is_none")]
-    phonetic_pr: Option<PhoneticPr>,
-    #[serde(rename = "conditionalFormatting", default, skip_serializing_if = "Vec::is_empty")]
-    conditional_formatting: Vec<ConditionalFormatting>,
-    #[serde(rename = "dataValidations", default, skip_serializing_if = "Option::is_none")]
-    data_validations: Option<DataValidations>,
-    #[serde(rename = "hyperlinks", default, skip_serializing_if = "Option::is_none")]
-    hyperlinks: Option<Hyperlinks>,
-    #[serde(rename = "autoFilter", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "autoFilter",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     auto_filter: Option<AutoFilter>,
-    #[serde(rename = "printOptions", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "mergeCells",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    merge_cells: Option<MergeCells>,
+    #[serde(
+        rename = "phoneticPr",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    phonetic_pr: Option<PhoneticPr>,
+    #[serde(
+        rename = "conditionalFormatting",
+        default,
+        skip_serializing_if = "Vec::is_empty"
+    )]
+    conditional_formatting: Vec<ConditionalFormatting>,
+    #[serde(
+        rename = "dataValidations",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    data_validations: Option<DataValidations>,
+    #[serde(
+        rename = "hyperlinks",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    hyperlinks: Option<Hyperlinks>,
+    #[serde(
+        rename = "printOptions",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     print_options: Option<PrintOptions>,
     #[serde(rename = "pageMargins")]
     page_margins: PageMargins,
     #[serde(rename = "pageSetup", default, skip_serializing_if = "Option::is_none")]
     page_setup: Option<PageSetup>,
-    #[serde(rename = "autoFilter", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "autoFilter",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     header_footer: Option<HeaderFooter>,
     #[serde(rename = "rowBreaks", default, skip_serializing_if = "Option::is_none")]
-    row_breakers: Option<RowBreaks>,
-    #[serde(rename = "ignoredErrors", default, skip_serializing_if = "Option::is_none")]
+    row_breakers: Option<PageBreaks>,
+    #[serde(rename = "colBreaks", default, skip_serializing_if = "Option::is_none")]
+    col_breakers: Option<PageBreaks>,
+    #[serde(
+        rename = "ignoredErrors",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     ignored_errors: Option<IgnoredErrors>,
     #[serde(rename = "drawing", default, skip_serializing_if = "Option::is_none")]
     drawing: Option<Drawing>,
-    #[serde(rename = "legacyDrawing", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "legacyDrawing",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     legacy_drawing: Option<Drawing>,
-    #[serde(rename = "tableParts", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "tableParts",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     table_parts: Option<TableParts>,
     #[serde(rename = "picture", default, skip_serializing_if = "Option::is_none")]
     picture: Option<Picture>,
@@ -107,47 +153,64 @@ impl WorkSheet {
 /// Column xml method
 ///
 impl WorkSheet {
-    pub(crate) fn get_col<R: LocationRange>(&self, col_range: R) -> ColResult<HashMap<String, Column>> {
+    pub(crate) fn get_col<R: LocationRange>(
+        &self,
+        col_range: R,
+    ) -> ColResult<HashMap<String, Column>> {
         let (min, max) = col_range.to_col_range();
         let res = match &self.cols {
-            None => {
-                HashMap::new()
-            }
-            Some(cols) => {
-                cols.index_range_col_tree(min, max)
-                    .iter()
-                    .map(|(min, max, col)| ((1, *min, 1, *max).to_col_range_ref(), col.to_api_column()))
-                    .collect()
-            }
+            None => HashMap::new(),
+            Some(cols) => cols
+                .index_range_col_tree(min, max)
+                .iter()
+                .map(|(min, max, col)| ((1, *min, 1, *max).to_col_range_ref(), col.to_api_column()))
+                .collect(),
         };
         Ok(res)
     }
 
-    pub(crate) fn set_col_by_column<R: LocationRange>(&mut self, col_range: R, column: &Column) -> ColResult<()> {
+    pub(crate) fn set_col_by_column<R: LocationRange>(
+        &mut self,
+        col_range: R,
+        column: &Column,
+    ) -> ColResult<()> {
         let (min, max) = col_range.to_col_range();
-        let cols = self.cols.get_or_insert(Cols::default()).index_range_col_tree(min, max);
+        let cols = self
+            .cols
+            .get_or_insert(Cols::default())
+            .index_range_col_tree(min, max);
         if cols.is_empty() {
             let mut col = Col::default();
             col.update_by_api_column(column);
-            self.cols.get_or_insert(Cols::default()).update_col_tree(min, max, col);
+            self.cols
+                .get_or_insert(Cols::default())
+                .update_col_tree(min, max, col);
         }
         let mut s = min;
         if cols.len() > 0 && cols[cols.len() - 1].1 < max {
             let mut col = Col::default();
             col.update_by_api_column(column);
-            self.cols.get_or_insert(Cols::default()).update_col_tree(cols[cols.len() - 1].1, max, col);
+            self.cols.get_or_insert(Cols::default()).update_col_tree(
+                cols[cols.len() - 1].1,
+                max,
+                col,
+            );
         }
         for i in 0..cols.len() {
             if s < cols[i].0 {
                 // new then update columns not exists
                 let mut col = Col::default();
                 col.update_by_api_column(column);
-                self.cols.get_or_insert(Cols::default()).update_col_tree(s, cols[i].0, col);
+                self.cols
+                    .get_or_insert(Cols::default())
+                    .update_col_tree(s, cols[i].0, col);
             }
             // update columns already exists
             let mut col = cols[i].2;
             col.update_by_api_column(column);
-            self.cols.get_or_insert(Cols::default()).update_col_tree(cols[i].0, cols[i].1, col);
+            self.cols
+                .get_or_insert(Cols::default())
+                .update_col_tree(cols[i].0, cols[i].1, col);
             s = cols[i].1
         }
         // if let Some(collapsed) = column.collapsed {
@@ -159,21 +222,24 @@ impl WorkSheet {
 }
 
 impl WorkSheet {
-
     pub(crate) fn get_default_style<L: Location>(&self, loc: &L) -> Option<u32> {
         let row_style = self.sheet_data.get_default_style(loc);
         match row_style {
             Some(style) => Some(style),
-            None => {
-                match &self.cols {
-                    None => None,
-                    Some(cols) => cols.get_default_style(loc.to_col()),
-                }
-            }
+            None => match &self.cols {
+                None => None,
+                Some(cols) => cols.get_default_style(loc.to_col()),
+            },
         }
     }
 
-    pub(crate) fn add_merge_cell(&mut self, first_row: u32, first_col: u32, last_row: u32, last_col: u32) {
+    pub(crate) fn add_merge_cell(
+        &mut self,
+        first_row: u32,
+        first_col: u32,
+        last_row: u32,
+        last_col: u32,
+    ) {
         let merge_cells = self.merge_cells.get_or_insert(Default::default());
         merge_cells.add_merge_cell(first_row, first_col, last_row, last_col);
     }
@@ -227,6 +293,14 @@ impl WorkSheet {
         self.sheet_format_pr.set_default_col_width(width);
     }
 
+    pub(crate) fn set_base_col_width(&mut self, width: u8) {
+        self.sheet_format_pr.set_base_col_width(width);
+    }
+
+    pub(crate) fn get_base_col_width(&self) -> Option<u8> {
+        self.sheet_format_pr.get_base_col_width()
+    }
+
     pub(crate) fn set_default_col_width_adaptive(&mut self) {
         self.sheet_format_pr.set_default_col_width_adaptive()
     }
@@ -239,7 +313,13 @@ impl WorkSheet {
         self.sheet_format_pr.hide_unused_rows(hide);
     }
 
-    pub(crate) fn outline_settings(&mut self, visible: bool, symbols_below: bool, symbols_right: bool, auto_style: bool) {
+    pub(crate) fn outline_settings(
+        &mut self,
+        visible: bool,
+        symbols_below: bool,
+        symbols_right: bool,
+        auto_style: bool,
+    ) {
         let sheet_pr = self.sheet_pr.get_or_insert(Default::default());
         sheet_pr.set_outline_pr(visible, symbols_below, symbols_right, auto_style);
     }
@@ -252,7 +332,7 @@ impl WorkSheet {
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 struct Dimension {
-    #[serde(rename="@ref")]
+    #[serde(rename = "@ref")]
     refer: String,
 }
 
@@ -298,6 +378,7 @@ impl Default for WorkSheet {
             header_footer: None,
             print_options: None,
             row_breakers: None,
+            col_breakers: None,
             ignored_errors: None,
             picture: None,
             hyperlinks: None,
@@ -320,7 +401,10 @@ struct PageSetup {
     horizontal_dpi: Option<i32>,
     #[serde(rename = "@verticalDpi", skip_serializing_if = "Option::is_none")]
     vertical_dpi: Option<i32>,
-    #[serde(rename(serialize = "@r:id", deserialize = "@id"), skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename(serialize = "@r:id", deserialize = "@id"),
+        skip_serializing_if = "Option::is_none"
+    )]
     r_id: Option<Rel>,
 }
 
@@ -332,7 +416,10 @@ struct HeaderFooter {
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 struct PrintOptions {
-    #[serde(rename = "@horizontalCentered", skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "@horizontalCentered",
+        skip_serializing_if = "Option::is_none"
+    )]
     horizontal_centered: Option<u8>,
 }
 
@@ -345,11 +432,16 @@ impl WorkSheet {
     //     Ok(work_sheet)
     // }
 
-    pub(crate) fn save<P: AsRef<Path>>(& self, file_path: P, target: &str) {
+    pub(crate) fn save<P: AsRef<Path>>(&self, file_path: P, target: &str) {
         let xml = se::to_string_with_root("worksheet", &self).unwrap();
-        let mut xml = format!("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n{}", xml);
+        let mut xml = format!(
+            "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n{}",
+            xml
+        );
         // xml = xml.replace("&quot;", "\"");
-        let mut file = XlsxFileWriter::from_path(file_path, XlsxFileType::SheetFile(target.to_string())).unwrap();
+        let mut file =
+            XlsxFileWriter::from_path(file_path, XlsxFileType::SheetFile(target.to_string()))
+                .unwrap();
         file.write_all(xml.as_ref()).unwrap();
     }
 }

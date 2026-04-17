@@ -2,6 +2,8 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub(crate) struct SheetFormatPr {
+    #[serde(rename = "@baseColWidth", skip_serializing_if = "Option::is_none")]
+    base_col_width: Option<u8>,
     #[serde(rename = "@defaultColWidth", skip_serializing_if = "Option::is_none")]
     default_col_width: Option<f64>,
     #[serde(rename = "@defaultRowHeight")]
@@ -12,13 +14,17 @@ pub(crate) struct SheetFormatPr {
     zero_height: Option<u8>,
     #[serde(rename = "@outlineLevelCol", skip_serializing_if = "Option::is_none")]
     outline_level_col: Option<u8>,
-    #[serde(rename(serialize = "@x14ac:dyDescent", deserialize = "@dyDescent"), skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename(serialize = "@x14ac:dyDescent", deserialize = "@dyDescent"),
+        skip_serializing_if = "Option::is_none"
+    )]
     x14ac_dy_descent: Option<f64>,
 }
 
 impl Default for SheetFormatPr {
     fn default() -> SheetFormatPr {
         SheetFormatPr {
+            base_col_width: None,
             default_col_width: None,
             default_row_height: 15.0,
             custom_height: None,
@@ -39,6 +45,16 @@ impl SheetFormatPr {
         self.default_row_height
     }
 
+    pub(crate) fn set_base_col_width(&mut self, width: u8) {
+        self.custom_height = Some(1);
+        self.base_col_width = Some(width);
+    }
+
+    pub(crate) fn set_base_col_width_adaptive(&mut self) {
+        self.custom_height = Some(0);
+        self.base_col_width = None;
+    }
+
     pub(crate) fn set_default_col_width(&mut self, width: f64) {
         self.custom_height = Some(1);
         self.default_col_width = Some(width);
@@ -51,6 +67,10 @@ impl SheetFormatPr {
 
     pub(crate) fn get_default_col_width(&self) -> Option<f64> {
         self.default_col_width
+    }
+
+    pub(crate) fn get_base_col_width(&self) -> Option<u8> {
+        self.base_col_width
     }
 
     pub(crate) fn hide_unused_rows(&mut self, hide: bool) {

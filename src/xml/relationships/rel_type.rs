@@ -1,6 +1,6 @@
-use std::fmt::Formatter;
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use serde::de::{Error, Visitor};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use std::fmt::Formatter;
 
 #[derive(Debug, Clone, PartialEq, Hash)]
 pub(crate) enum RelType {
@@ -18,11 +18,15 @@ pub(crate) enum RelType {
     PrinterSettings,
     CalcChain,
     Table,
-    Chart
+    Chart,
+    CustomXML,
 }
 
 impl Serialize for RelType {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S: Serializer {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
         serializer.serialize_str(self.get_type())
     }
 }
@@ -34,12 +38,18 @@ impl<'de> Visitor<'de> for RelType {
         todo!()
     }
 
-    fn visit_str<E>(self, v: &str) -> Result<Self::Value, E> where E: Error {
+    fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
+    where
+        E: Error,
+    {
         Ok(RelType::from_namespace(v))
     }
 }
 impl<'de> Deserialize<'de> for RelType {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error> where D: Deserializer<'de> {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
         deserializer.deserialize_string(RelType::Unknown)
     }
 }
@@ -47,41 +57,103 @@ impl<'de> Deserialize<'de> for RelType {
 impl RelType {
     pub(crate) fn get_type(&self) -> &str {
         match self {
-            RelType::Worksheets => "http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet",
-            RelType::Theme => "http://schemas.openxmlformats.org/officeDocument/2006/relationships/theme",
-            RelType::Styles => "http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles",
-            RelType::Images => "http://schemas.openxmlformats.org/officeDocument/2006/relationships/image",
-            RelType::Hyperlinks => "http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink",
-            RelType::Drawings => "http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing",
-            RelType::SharedStrings => "http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings",
-            RelType::MetaData => "http://schemas.openxmlformats.org/officeDocument/2006/relationships/sheetMetadata",
-            RelType::VmlDrawing => "http://schemas.openxmlformats.org/officeDocument/2006/relationships/vmlDrawing",
-            RelType::Comments => "http://schemas.openxmlformats.org/officeDocument/2006/relationships/comments",
-            RelType::PrinterSettings => "http://schemas.openxmlformats.org/officeDocument/2006/relationships/printerSettings",
-            RelType::CalcChain => "http://schemas.openxmlformats.org/officeDocument/2006/relationships/calcChain",
-            RelType::Table => "http://schemas.openxmlformats.org/officeDocument/2006/relationships/table",
-            RelType::Chart => "http://schemas.openxmlformats.org/officeDocument/2006/relationships/chart",
+            RelType::Worksheets => {
+                "http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet"
+            }
+            RelType::Theme => {
+                "http://schemas.openxmlformats.org/officeDocument/2006/relationships/theme"
+            }
+            RelType::Styles => {
+                "http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles"
+            }
+            RelType::Images => {
+                "http://schemas.openxmlformats.org/officeDocument/2006/relationships/image"
+            }
+            RelType::Hyperlinks => {
+                "http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink"
+            }
+            RelType::Drawings => {
+                "http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing"
+            }
+            RelType::SharedStrings => {
+                "http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings"
+            }
+            RelType::MetaData => {
+                "http://schemas.openxmlformats.org/officeDocument/2006/relationships/sheetMetadata"
+            }
+            RelType::VmlDrawing => {
+                "http://schemas.openxmlformats.org/officeDocument/2006/relationships/vmlDrawing"
+            }
+            RelType::Comments => {
+                "http://schemas.openxmlformats.org/officeDocument/2006/relationships/comments"
+            }
+            RelType::PrinterSettings => {
+                "http://schemas.openxmlformats.org/officeDocument/2006/relationships/printerSettings"
+            }
+            RelType::CalcChain => {
+                "http://schemas.openxmlformats.org/officeDocument/2006/relationships/calcChain"
+            }
+            RelType::Table => {
+                "http://schemas.openxmlformats.org/officeDocument/2006/relationships/table"
+            }
+            RelType::Chart => {
+                "http://schemas.openxmlformats.org/officeDocument/2006/relationships/chart"
+            }
+            RelType::CustomXML => {
+                "http://schemas.openxmlformats.org/officeDocument/2006/relationships/customXml"
+            }
             RelType::Unknown => "",
         }
     }
 
     fn from_namespace(namespace: &str) -> Self {
         match namespace {
-            "http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" => RelType::Worksheets,
-            "http://schemas.openxmlformats.org/officeDocument/2006/relationships/theme" => RelType::Theme,
-            "http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" => RelType::Styles,
-            "http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" => RelType::Images,
-            "http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink" => RelType::Hyperlinks,
-            "http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing" => RelType::Drawings,
-            "http://schemas.openxmlformats.org/officeDocument/2006/relationships/sheetMetadata" => RelType::MetaData,
-            "http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings" => RelType::SharedStrings,
-            "http://schemas.openxmlformats.org/officeDocument/2006/relationships/vmlDrawing" => RelType::VmlDrawing,
-            "http://schemas.openxmlformats.org/officeDocument/2006/relationships/comments" => RelType::Comments,
-            "http://schemas.openxmlformats.org/officeDocument/2006/relationships/printerSettings" => RelType::PrinterSettings,
-            "http://schemas.openxmlformats.org/officeDocument/2006/relationships/calcChain" => RelType::CalcChain,
-            "http://schemas.openxmlformats.org/officeDocument/2006/relationships/table" => RelType::Table,
-            "http://schemas.openxmlformats.org/officeDocument/2006/relationships/chart" => RelType::Chart,
-            &_ => RelType::Unknown
+            "http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" => {
+                RelType::Worksheets
+            }
+            "http://schemas.openxmlformats.org/officeDocument/2006/relationships/theme" => {
+                RelType::Theme
+            }
+            "http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" => {
+                RelType::Styles
+            }
+            "http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" => {
+                RelType::Images
+            }
+            "http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink" => {
+                RelType::Hyperlinks
+            }
+            "http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing" => {
+                RelType::Drawings
+            }
+            "http://schemas.openxmlformats.org/officeDocument/2006/relationships/sheetMetadata" => {
+                RelType::MetaData
+            }
+            "http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings" => {
+                RelType::SharedStrings
+            }
+            "http://schemas.openxmlformats.org/officeDocument/2006/relationships/vmlDrawing" => {
+                RelType::VmlDrawing
+            }
+            "http://schemas.openxmlformats.org/officeDocument/2006/relationships/comments" => {
+                RelType::Comments
+            }
+            "http://schemas.openxmlformats.org/officeDocument/2006/relationships/printerSettings" => {
+                RelType::PrinterSettings
+            }
+            "http://schemas.openxmlformats.org/officeDocument/2006/relationships/calcChain" => {
+                RelType::CalcChain
+            }
+            "http://schemas.openxmlformats.org/officeDocument/2006/relationships/table" => {
+                RelType::Table
+            }
+            "http://schemas.openxmlformats.org/officeDocument/2006/relationships/chart" => {
+                RelType::Chart
+            }
+            "http://schemas.openxmlformats.org/officeDocument/2006/relationships/customXml" => {
+                RelType::CustomXML
+            }
+            &_ => RelType::Unknown,
         }
     }
 }

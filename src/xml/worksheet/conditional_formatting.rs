@@ -16,6 +16,12 @@ struct CfRule {
     dxf_id: Option<u8>,
     #[serde(rename = "@priority", default, skip_serializing_if = "Option::is_none")]
     priority: Option<u8>,
+    #[serde(
+        rename = "@stopIfTrue",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    stop_if_true: Option<u8>,
     #[serde(rename = "@operator", default, skip_serializing_if = "Option::is_none")]
     operator: Option<String>,
     #[serde(rename = "formula", default, skip_serializing_if = "Option::is_none")]

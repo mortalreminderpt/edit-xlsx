@@ -1,26 +1,19 @@
-pub(crate) mod write;
-pub(crate) mod row;
 pub(crate) mod col;
-pub(crate) mod read;
 mod format;
 mod hyperlink;
 mod image;
+pub(crate) mod read;
+pub(crate) mod row;
 mod theme;
+pub(crate) mod write;
 
-use std::cell::RefCell;
-use std::collections::HashMap;
-use std::fs::File;
-use std::path::Path;
-use std::rc::Rc;
-use zip::ZipArchive;
-use crate::{Cell, Filters, Format, FormatColor, FormatFill, FormatFont, xml};
 use crate::api::cell::location::{Location, LocationRange};
+use crate::api::workbook::Workbook as ApiWorkbook;
 use crate::api::worksheet::col::WorkSheetCol;
 use crate::api::worksheet::image::Image;
 use crate::api::worksheet::read::Read;
 use crate::api::worksheet::row::WorkSheetRow;
 use crate::api::worksheet::write::Write;
-use crate::api::workbook::Workbook as ApiWorkbook;
 use crate::file::XlsxFileType;
 use crate::result::{WorkSheetError, WorkSheetResult};
 use crate::xml::drawings::Drawings;
@@ -29,9 +22,16 @@ use crate::xml::io::IoV2;
 use crate::xml::metadata::Metadata;
 use crate::xml::relationships::Relationships;
 use crate::xml::shared_string::SharedString;
-use crate::xml::worksheet::WorkSheet as XmlWorkSheet;
-use crate::xml::workbook::Workbook;
 use crate::xml::style::StyleSheet;
+use crate::xml::workbook::Workbook;
+use crate::xml::worksheet::WorkSheet as XmlWorkSheet;
+use crate::{Cell, Filters, Format, FormatColor, FormatFill, FormatFont, xml};
+use std::cell::RefCell;
+use std::collections::HashMap;
+use std::fs::File;
+use std::path::Path;
+use std::rc::Rc;
+use zip::ZipArchive;
 
 #[derive(Debug)]
 pub struct WorkSheet {
@@ -62,7 +62,8 @@ impl Read for WorkSheet {}
 impl WorkSheet {
     pub(crate) fn save_as<P: AsRef<Path>>(&self, file_path: P) -> WorkSheetResult<()> {
         self.worksheet.save(&file_path, &self.target);
-        self.worksheet_rel.save(&file_path, XlsxFileType::WorksheetRels(self.target_id));
+        self.worksheet_rel
+            .save(&file_path, XlsxFileType::WorksheetRels(self.target_id));
         // self.worksheet_rel.get_drawings_rids().iter().for_each(|id|{
         //     if let Some(drawings) = &self.drawings {
         //         drawings.save(&file_path, *id);
@@ -123,14 +124,19 @@ impl WorkSheet {
 
     pub fn set_name(&mut self, name: &str) -> WorkSheetResult<()> {
         let workbook = &mut self.workbook.borrow_mut();
-        let name_existed = workbook.sheets.sheets
+        let name_existed = workbook
+            .sheets
+            .sheets
             .iter()
             .filter(|sheet| sheet.name == name)
-            .count() > 0;
+            .count()
+            > 0;
         if name_existed {
             Err(WorkSheetError::DuplicatedSheets)
         } else {
-            workbook.sheets.sheets
+            workbook
+                .sheets
+                .sheets
                 .iter_mut()
                 .filter(|sheet| sheet.name == self.name)
                 .for_each(|sheet| sheet.name = name.to_string());
@@ -206,6 +212,16 @@ impl WorkSheet {
         worksheet.get_default_row_height()
     }
 
+    pub fn set_base_column(&mut self, width: u8) {
+        let worksheet = &mut self.worksheet;
+        worksheet.set_base_col_width(width);
+    }
+
+    pub fn get_base_column(&self) -> Option<u8> {
+        let worksheet = &self.worksheet;
+        worksheet.get_base_col_width()
+    }
+
     pub fn set_default_column(&mut self, height: f64) {
         let worksheet = &mut self.worksheet;
         worksheet.set_default_col_width(height);
@@ -226,13 +242,22 @@ impl WorkSheet {
         worksheet.hide_unused_rows(hide);
     }
 
-    pub fn outline_settings(&mut self, visible: bool, symbols_below: bool, symbols_right: bool, auto_style: bool) {
+    pub fn outline_settings(
+        &mut self,
+        visible: bool,
+        symbols_below: bool,
+        symbols_right: bool,
+        auto_style: bool,
+    ) {
         let worksheet = &mut self.worksheet;
         worksheet.outline_settings(visible, symbols_below, symbols_right, auto_style)
     }
 
     pub fn ignore_errors<L: Location>(&mut self, error_map: HashMap<&str, L>) {
-        let error_map = error_map.iter().map(|(&e, l)| (e, l.to_ref())).collect::<HashMap<&str, String>>();
+        let error_map = error_map
+            .iter()
+            .map(|(&e, l)| (e, l.to_ref()))
+            .collect::<HashMap<&str, String>>();
         let worksheet = &mut self.worksheet;
         worksheet.ignore_errors(error_map);
     }
@@ -240,9 +265,10 @@ impl WorkSheet {
     pub fn hide(&mut self) {
         let mut workbook = self.workbook.borrow_mut();
         let sheet = &mut workbook
-            .sheets.sheets
+            .sheets
+            .sheets
             .iter_mut()
-            .find(|s| { s.sheet_id == self.id })
+            .find(|s| s.sheet_id == self.id)
             .unwrap();
         sheet.state = Some(String::from("hidden"));
     }
@@ -257,7 +283,11 @@ impl WorkSheet {
         Ok(())
     }
 
-    pub fn insert_image<L: LocationRange, P: AsRef<Path>>(&mut self, loc_range: L, filename: &P) -> WorkSheetResult<()> {
+    pub fn insert_image<L: LocationRange, P: AsRef<Path>>(
+        &mut self,
+        loc_range: L,
+        filename: &P,
+    ) -> WorkSheetResult<()> {
         let (from_row, from_col, to_row, to_col) = loc_range.to_range();
         let r_id = self.add_drawing((from_row, from_col, to_row, to_col), filename)?;
         self.worksheet.insert_image(r_id);
@@ -270,7 +300,7 @@ impl WorkSheet {
 }
 
 impl WorkSheet {
-    pub(crate) fn add_worksheet (
+    pub(crate) fn add_worksheet(
         sheet_id: u32,
         name: &str,
         target_id: u32,
@@ -341,10 +371,15 @@ impl WorkSheet {
         shared_string: Rc<SharedString>,
     ) -> WorkSheet {
         // Read worksheet from zip dir
-        let mut worksheet = XmlWorkSheet::from_zip_file(archive, &format!("xl/{target}")).unwrap_or_default();
+        let mut worksheet =
+            XmlWorkSheet::from_zip_file(archive, &format!("xl/{target}")).unwrap_or_default();
         worksheet.sheet_data.clean_formula_value();
         let worksheet_rel_id: String = target.chars().filter(|&c| c >= '0' && c <= '9').collect();
-        let worksheet_rel = Relationships::from_zip_file(archive, &format!("xl/worksheets/_rels/sheet{worksheet_rel_id}.xml.rels")).unwrap_or_default();
+        let worksheet_rel = Relationships::from_zip_file(
+            archive,
+            &format!("xl/worksheets/_rels/sheet{worksheet_rel_id}.xml.rels"),
+        )
+        .unwrap_or_default();
         // load drawings
         let (mut drawings, mut drawings_rel) = (None, None);
         // worksheet_rel.get_drawings_rids().iter().for_each(|&drawings_id|{
@@ -352,12 +387,19 @@ impl WorkSheet {
         //     drawings_rel = Relationships::from_zip_file(archive, &format!("xl/drawings/_rels/drawing{drawings_id}.xml.rels"));
         // });
         if let Some(&drawings_id) = worksheet_rel.get_drawings_rids().first() {
-            drawings = Drawings::from_zip_file(archive, &format!("xl/drawings/drawing{drawings_id}.xml"));
-            drawings_rel = Relationships::from_zip_file(archive, &format!("xl/drawings/_rels/drawing{drawings_id}.xml.rels"));
+            drawings =
+                Drawings::from_zip_file(archive, &format!("xl/drawings/drawing{drawings_id}.xml"));
+            drawings_rel = Relationships::from_zip_file(
+                archive,
+                &format!("xl/drawings/_rels/drawing{drawings_id}.xml.rels"),
+            );
         };
         let vml_drawing = match worksheet_rel.get_vml_drawing_rid() {
-            Some(vml_drawing_id) => VmlDrawing::from_zip_file(archive, &format!("xl/drawings/vmlDrawing{vml_drawing_id}.xml")),
-            None => None
+            Some(vml_drawing_id) => VmlDrawing::from_zip_file(
+                archive,
+                &format!("xl/drawings/vmlDrawing{vml_drawing_id}.xml"),
+            ),
+            None => None,
         };
         WorkSheet {
             id: sheet_id,

@@ -1,16 +1,20 @@
-use serde::{Deserialize, Serialize};
-use crate::Filters as ApiFilters;
 use crate::Filter as ApiFilter;
+use crate::Filters as ApiFilters;
 use crate::xml::common::XmlnsAttrs;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub(crate) struct AutoFilter {
-    #[serde(flatten)]
-    pub(crate) xmlns_attrs: XmlnsAttrs,
     #[serde(rename = "@ref", default, skip_serializing_if = "String::is_empty")]
     pub(crate) sqref: String,
-    #[serde(rename = "filterColumn", default, skip_serializing_if = "Vec::is_empty")]
-    filter_column: Vec<FilterColumn>
+    #[serde(flatten)]
+    pub(crate) xmlns_attrs: XmlnsAttrs,
+    #[serde(
+        rename = "filterColumn",
+        default,
+        skip_serializing_if = "Vec::is_empty"
+    )]
+    filter_column: Vec<FilterColumn>,
 }
 
 impl Default for AutoFilter {
@@ -27,9 +31,15 @@ impl AutoFilter {
     pub(crate) fn add_filters(&mut self, col: u32, filters: &ApiFilters) {
         let mut filter_column = FilterColumn::new(col);
         if filters.is_custom_filters() {
-            filter_column.custom_filters.get_or_insert(Default::default()).add_custom_filters(filters);
+            filter_column
+                .custom_filters
+                .get_or_insert(Default::default())
+                .add_custom_filters(filters);
         } else {
-            filter_column.filters.get_or_insert(Default::default()).add_filters(filters);
+            filter_column
+                .filters
+                .get_or_insert(Default::default())
+                .add_filters(filters);
         }
         self.filter_column.push(filter_column);
     }
@@ -64,16 +74,14 @@ struct Filters {
     #[serde(rename = "filter")]
     filters: Vec<Filter>,
     #[serde(rename = "customFilter")]
-    custom_filters: Vec<Filter>
+    custom_filters: Vec<Filter>,
 }
 
 impl Filters {
     fn add_custom_filters(&mut self, api_filters: &ApiFilters) {
         self.and = api_filters.and;
         api_filters.filters.iter().for_each(|f| {
-            self.custom_filters.push(
-                Filter::from_api_filter(f)
-            );
+            self.custom_filters.push(Filter::from_api_filter(f));
         });
     }
 
@@ -81,9 +89,7 @@ impl Filters {
         self.and = api_filters.and;
         self.blank = api_filters.blank;
         api_filters.filters.iter().for_each(|f| {
-            self.filters.push(
-                Filter::from_api_filter(f)
-            );
+            self.filters.push(Filter::from_api_filter(f));
         });
     }
 }
@@ -93,7 +99,7 @@ struct Filter {
     #[serde(rename = "@val")]
     val: Option<String>,
     #[serde(rename = "@operator", skip_serializing_if = "Option::is_none")]
-    operator: Option<String>
+    operator: Option<String>,
 }
 
 impl Filter {
@@ -107,7 +113,11 @@ impl Filter {
     fn from_api_filter(api_filter: &ApiFilter) -> Filter {
         Filter {
             val: Some(api_filter.val.to_string()),
-            operator: if let Some(operator) = api_filter.operator { Some(operator.to_string()) } else { None },
+            operator: if let Some(operator) = api_filter.operator {
+                Some(operator.to_string())
+            } else {
+                None
+            },
         }
     }
 }

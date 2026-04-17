@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
-pub(crate) struct RowBreaks {
+pub(crate) struct PageBreaks {
     #[serde(rename = "@count", default)]
     count: u32,
     #[serde(rename = "@manualBreakCount", default)]
